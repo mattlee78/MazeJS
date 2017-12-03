@@ -1,4 +1,27 @@
-﻿// Your code here!
+﻿(function () {
+
+    window.addEventListener("resize", resizeThrottler, false);
+
+    var resizeTimeout;
+    function resizeThrottler()
+    {
+        // ignore resize events as long as an actualResizeHandler execution is in the queue
+        if (!resizeTimeout)
+        {
+            resizeTimeout = setTimeout(function () {
+                resizeTimeout = null;
+                actualResizeHandler();
+
+                // The actualResizeHandler will execute at a rate of 15fps
+            }, 66);
+        }
+    }
+
+    function actualResizeHandler()
+    {
+        refresh();
+    }
+}());
 
 function onLoad()
 {
@@ -8,10 +31,10 @@ function onLoad()
 
     maze = new Maze();
 
-    maze.initRectangle(30, 30, 35, 50, 50);
-    //maze.initCircle(12, 16, 30, 60, 600, 600);
+    //maze.initRectangle(10, 10, 90);
+    maze.initCircle(10, 6, 60, 2);
 
-    maze.solve();
+    maze.build();
 
     refresh();
 }
@@ -24,9 +47,21 @@ function refresh()
 function mouseX(e) { return e.clientX - e.target.offsetLeft; }
 function mouseY(e) { return e.clientY - e.target.offsetTop; }
 
+function printMaze()
+{
+    try
+    {
+        window.print();
+    }
+    catch (err)
+    {
+
+    }
+}
+
 function onLeftClick(e)
 {
-    refresh();
+    printMaze();
 }
 
 function render()
@@ -37,12 +72,12 @@ function render()
     c.lineWidth = 5;
     c.strokeStyle = "#000000";
 
-    maze.draw(c);
+    maze.draw(c, 5, 5);
 
     c.lineWidth = 3;
     c.strokeStyle = "#ff0000";
 
-    maze.drawSolution(c, maze.getLastCell());
+    //maze.drawSolution(c, maze.getLastCell());
 }
 
 onLoad();
