@@ -3,7 +3,7 @@
     var xpos = 0;
     var ypos = 0;
 
-    for (cellY = 0; cellY < heightCells; ++cellY) {
+    for (var cellY = 0; cellY < heightCells; ++cellY) {
         var currentRow = new Array();
         var leftNeighbor = null;
 
@@ -12,24 +12,24 @@
 
         var isBottomRow = (cellY >= (heightCells - 1));
 
-        for (cellX = 0; cellX < widthCells; ++cellX) {
+        for (var cellX = 0; cellX < widthCells; ++cellX) {
             var leftX = cellX * cellSize + xpos;
             var rightX = leftX + cellSize;
 
-            var leftEdge = new Edge(leftX, topY, leftX, bottomY, 1);
-            var topEdge = new Edge(leftX, topY, rightX, topY, 1);
+            var leftEdge = new Edge([new Point(leftX, topY), new Point(leftX, bottomY)], 1);
+            var topEdge = new Edge([new Point(leftX, topY), new Point(rightX, topY)], 1);
 
             var newCell = new Cell();
             currentRow.push(newCell);
             this.m_cells.push(newCell);
 
             if (isBottomRow) {
-                var bottomEdge = new Edge(leftX, bottomY, rightX, bottomY, 1);
+                var bottomEdge = new Edge([new Point(leftX, bottomY), new Point(rightX, bottomY)], 1);
                 newCell.addEdge(null, bottomEdge);
                 this.m_edges.push(bottomEdge);
             }
             if (cellX >= (widthCells - 1)) {
-                var rightEdge = new Edge(rightX, topY, rightX, bottomY, 1);
+                var rightEdge = new Edge([new Point(rightX, topY), new Point(rightX, bottomY)], 1);
                 newCell.addEdge(null, rightEdge);
                 this.m_edges.push(rightEdge);
             }
@@ -55,6 +55,25 @@
     this.computeCellCenters();
 }
 
+function makeRingEdge(radius, startAngle, arcTheta, xpos, ypos, multiplier)
+{
+    var pixelsPerSegment = 15;
+    var circumference = 2 * Math.PI * radius;
+    var segmentsPerCircle = circumference / pixelsPerSegment;
+    var circlePercent = arcTheta / (2 * Math.PI);
+    var arcSegmentCount = Math.max(1, segmentsPerCircle * circlePercent) | 0;
+    var arcArray = new Array();
+    var arcSegmentTheta = arcTheta / arcSegmentCount;
+    for (var d = 0; d <= arcSegmentCount; ++d) {
+        var segmentAngle = startAngle + arcSegmentTheta * d;
+        var arcPosX = Math.sin(segmentAngle) * radius + xpos;
+        var arcPosY = Math.cos(segmentAngle) * radius + ypos;
+        var p = new Point(arcPosX, arcPosY);
+        arcArray.push(p);
+    }
+    return new Edge(arcArray, multiplier);
+}
+
 Maze.prototype.initCircle = function (innerRingCellCount, ringCount, ringThickness, centerRadius) {
     var prevRing = null;
 
@@ -69,7 +88,7 @@ Maze.prototype.initCircle = function (innerRingCellCount, ringCount, ringThickne
     var xpos = totalRadius;
     var ypos = totalRadius;
 
-    for (ringIndex = 0; ringIndex < ringCount; ++ringIndex) {
+    for (var ringIndex = 0; ringIndex < ringCount; ++ringIndex) {
         var isOuterRing = (ringIndex >= (ringCount - 1));
 
         var currentRing = new Array();
@@ -87,18 +106,16 @@ Maze.prototype.initCircle = function (innerRingCellCount, ringCount, ringThickne
         var firstRingCell = null;
 
         var theta = (2 * Math.PI) / ringCellCount;
-        for (cellIndex = 0; cellIndex < ringCellCount; ++cellIndex) {
+        for (var cellIndex = 0; cellIndex < ringCellCount; ++cellIndex) {
             var leftAngle = cellIndex * theta;
             var rightAngle = leftAngle + theta;
             var innerLeftPosX = Math.sin(leftAngle) * ringInnerRadius + xpos;
             var innerLeftPosY = Math.cos(leftAngle) * ringInnerRadius + ypos;
-            var innerRightPosX = Math.sin(rightAngle) * ringInnerRadius + xpos;
-            var innerRightPosY = Math.cos(rightAngle) * ringInnerRadius + ypos;
             var outerLeftPosX = Math.sin(leftAngle) * ringOuterRadius + xpos;
             var outerLeftPosY = Math.cos(leftAngle) * ringOuterRadius + ypos;
 
-            var ringEdge = new Edge(innerLeftPosX, innerLeftPosY, innerRightPosX, innerRightPosY, 1);
-            var spokeEdge = new Edge(innerLeftPosX, innerLeftPosY, outerLeftPosX, outerLeftPosY, 10);
+            var ringEdge = makeRingEdge(ringInnerRadius, leftAngle, theta, xpos, ypos, 1);
+            var spokeEdge = new Edge([new Point(innerLeftPosX, innerLeftPosY), new Point(outerLeftPosX, outerLeftPosY)], 10);
 
             var newCell = new Cell();
             this.m_cells.push(newCell);
@@ -118,9 +135,7 @@ Maze.prototype.initCircle = function (innerRingCellCount, ringCount, ringThickne
             this.m_edges.push(ringEdge);
 
             if (isOuterRing) {
-                var outerRightPosX = Math.sin(rightAngle) * ringOuterRadius + xpos;
-                var outerRightPosY = Math.cos(rightAngle) * ringOuterRadius + ypos;
-                var outerRingEdge = new Edge(outerLeftPosX, outerLeftPosY, outerRightPosX, outerRightPosY, 1);
+                var outerRingEdge = makeRingEdge(ringOuterRadius, leftAngle, theta, xpos, ypos, 1);
                 newCell.addEdge(null, outerRingEdge);
                 this.m_edges.push(outerRingEdge);
             }

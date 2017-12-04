@@ -38,7 +38,7 @@ Cell.prototype.openEdgeByIndex = function (index)
 Cell.prototype.openEdge = function (neighbor)
 {
     var neighborCount = this.m_neighborArray.length;
-    for (i = 0; i < neighborCount; ++i)
+    for (var i = 0; i < neighborCount; ++i)
     {
         if (this.m_neighborArray[i] == neighbor)
         {

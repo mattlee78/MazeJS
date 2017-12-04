@@ -24,17 +24,17 @@ Maze.prototype.getLastCell = function ()
 
 Maze.prototype.draw = function (c, xpos, ypos)
 {
-    for (edge of this.m_edges)
+    for (var edge of this.m_edges)
     {
         edge.drawn = false;
     }
 
     c.beginPath();
 
-    for (cell of this.m_cells)
+    for (var cell of this.m_cells)
     {
         var edgeCount = cell.m_edgeArray.length;
-        for (i = 0; i < edgeCount; ++i)
+        for (var i = 0; i < edgeCount; ++i)
         {
             var mask = 1 << i;
             if ((cell.m_openEdgeMask & mask) == 0)
@@ -69,27 +69,25 @@ Maze.prototype.drawSolution = function (c, startCell)
 
 Maze.prototype.computeCellCenters = function ()
 {
-    for (cell of this.m_cells)
+    for (var cell of this.m_cells)
     {
-        var x = 0;
-        var y = 0;
+        var cp = new Point(0, 0);
         var pointCount = 0;
-        for (edge of cell.m_edgeArray)
+        for (var edge of cell.m_edgeArray)
         {
-            x += edge.ax;
-            x += edge.bx;
-            y += edge.ay;
-            y += edge.by;
-            pointCount += 2;
+            var ec = edge.getCenter();
+            cp.x += ec.x;
+            cp.y += ec.y;
+            ++pointCount;
         }
-        cell.m_centerX = x / pointCount;
-        cell.m_centerY = y / pointCount;
+        cell.m_centerX = cp.x / pointCount;
+        cell.m_centerY = cp.y / pointCount;
     }
 }
 
 Maze.prototype.addUntouchedNeighbors = function (cell)
 {
-    for (n of cell.m_neighborArray)
+    for (var n of cell.m_neighborArray)
     {
         if (n != null && !n.hasBeenTouched())
         {
@@ -111,7 +109,7 @@ Maze.prototype.getUntouchedCell = function ()
 
     var count = this.m_buildarray.length;
     var shufflecount = count / 2;
-    for (i = 0; i < shufflecount; ++i)
+    for (var i = 0; i < shufflecount; ++i)
     {
         var indexa = (Math.random() * count) | 0;
         var indexb = (Math.random() * count) | 0;
@@ -158,13 +156,13 @@ Maze.prototype.build = function ()
         }
         var touchedNeighbors = new Array();
         var neighborCount = newCell.m_neighborArray.length;
-        for (i = 0; i < neighborCount; ++i)
+        for (var i = 0; i < neighborCount; ++i)
         {
             var neighbor = newCell.m_neighborArray[i];
             if (neighbor != null && neighbor.hasBeenTouched())
             {
                 var edge = newCell.m_edgeArray[i];
-                for (j = 0; j < edge.multiplier; ++j)
+                for (var j = 0; j < edge.multiplier; ++j)
                 {
                     touchedNeighbors.push(i);
                 }
