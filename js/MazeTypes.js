@@ -1,9 +1,11 @@
-﻿Maze.prototype.initRectangle = function (widthCells, heightCells, cellSize) {
+﻿Maze.prototype.initRectangle = function (widthCells, heightCells, cellSize)
+{
     var prevRow = null;
     var xpos = 0;
-    var ypos = 0;
+    var ypos = cellSize;
 
-    for (var cellY = 0; cellY < heightCells; ++cellY) {
+    for (var cellY = 0; cellY < heightCells; ++cellY)
+    {
         var currentRow = new Array();
         var leftNeighbor = null;
 
@@ -12,7 +14,8 @@
 
         var isBottomRow = (cellY >= (heightCells - 1));
 
-        for (var cellX = 0; cellX < widthCells; ++cellX) {
+        for (var cellX = 0; cellX < widthCells; ++cellX)
+        {
             var leftX = cellX * cellSize + xpos;
             var rightX = leftX + cellSize;
 
@@ -23,27 +26,47 @@
             currentRow.push(newCell);
             this.m_cells.push(newCell);
 
-            if (isBottomRow) {
-                var bottomEdge = new Edge([new Point(leftX, bottomY), new Point(rightX, bottomY)], 1);
-                newCell.addEdge(null, bottomEdge);
-                this.m_edges.push(bottomEdge);
-            }
-            if (cellX >= (widthCells - 1)) {
-                var rightEdge = new Edge([new Point(rightX, topY), new Point(rightX, bottomY)], 1);
-                newCell.addEdge(null, rightEdge);
-                this.m_edges.push(rightEdge);
-            }
-
-            newCell.addEdge(leftNeighbor, leftEdge);
-            this.m_edges.push(leftEdge);
-            if (prevRow != null) {
+            if (prevRow != null)
+            {
                 var aboveCell = prevRow[cellX];
                 newCell.addEdge(aboveCell, topEdge);
             }
-            else {
-                newCell.addEdge(null, topEdge);
+            else
+            {
+                var topExitCell = null;
+                if (cellX == 0)
+                {
+                    topExitCell = new Cell();
+                    topExitCell.m_center = new Point(leftX + cellSize * 0.5, topY - cellSize * 0.5);
+                    this.m_exitCells.push(topExitCell);
+                }
+                newCell.addEdge(topExitCell, topEdge);
             }
             this.m_edges.push(topEdge);
+
+            newCell.addEdge(leftNeighbor, leftEdge);
+            this.m_edges.push(leftEdge);
+
+            if (cellX >= (widthCells - 1))
+            {
+                var rightEdge = new Edge([new Point(rightX, topY), new Point(rightX, bottomY)], 1);
+                newCell.addEdge(bottomExitCell, rightEdge);
+                this.m_edges.push(rightEdge);
+            }
+
+            if (isBottomRow)
+            {
+                var bottomExitCell = null;
+                if (cellX >= (widthCells - 1))
+                {
+                    bottomExitCell = new Cell();
+                    bottomExitCell.m_center = new Point(leftX + cellSize * 0.5, bottomY + cellSize * 0.5);
+                    this.m_exitCells.push(bottomExitCell);
+                }
+                var bottomEdge = new Edge([new Point(leftX, bottomY), new Point(rightX, bottomY)], 1);
+                newCell.addEdge(bottomExitCell, bottomEdge);
+                this.m_edges.push(bottomEdge);
+            }
 
             leftNeighbor = newCell;
         }
@@ -86,9 +109,10 @@ Maze.prototype.initCircle = function (innerRingCellCount, ringCount, ringThickne
 
     var totalRadius = centerRadius + (ringCount * ringThickness);
     var xpos = totalRadius;
-    var ypos = totalRadius;
+    var ypos = totalRadius + ringThickness;
 
-    for (var ringIndex = 0; ringIndex < ringCount; ++ringIndex) {
+    for (var ringIndex = 0; ringIndex < ringCount; ++ringIndex)
+    {
         var isOuterRing = (ringIndex >= (ringCount - 1));
 
         var currentRing = new Array();
@@ -97,7 +121,8 @@ Maze.prototype.initCircle = function (innerRingCellCount, ringCount, ringThickne
         var ringOuterRadius = ringInnerRadius + ringThickness;
         var ringCellWidth = (ringInnerRadius * 2 * Math.PI) / ringCellCount;
         var prevRingDivisor = 1;
-        if ((ringCellWidth / firstRingCellWidth) > 2) {
+        if ((ringCellWidth / firstRingCellWidth) > 2)
+        {
             ringCellCount *= 2;
             prevRingDivisor = 2;
         }
@@ -106,7 +131,8 @@ Maze.prototype.initCircle = function (innerRingCellCount, ringCount, ringThickne
         var firstRingCell = null;
 
         var theta = (2 * Math.PI) / ringCellCount;
-        for (var cellIndex = 0; cellIndex < ringCellCount; ++cellIndex) {
+        for (var cellIndex = 0; cellIndex < ringCellCount; ++cellIndex)
+        {
             var leftAngle = cellIndex * theta;
             var rightAngle = leftAngle + theta;
             var innerLeftPosX = Math.sin(leftAngle) * ringInnerRadius + xpos;
@@ -120,7 +146,8 @@ Maze.prototype.initCircle = function (innerRingCellCount, ringCount, ringThickne
             var newCell = new Cell();
             this.m_cells.push(newCell);
             currentRing.push(newCell);
-            if (firstRingCell == null) {
+            if (firstRingCell == null)
+            {
                 firstRingCell = newCell;
             }
 
@@ -128,15 +155,32 @@ Maze.prototype.initCircle = function (innerRingCellCount, ringCount, ringThickne
             this.m_edges.push(spokeEdge);
 
             var innerNeighbor = null;
-            if (prevRing != null) {
+            if (prevRing != null)
+            {
                 innerNeighbor = prevRing[cellIndex / prevRingDivisor];
+            }
+            else if (cellIndex == 0)
+            {
+                innerNeighbor = new Cell();
+                innerNeighbor.m_center = new Point(xpos, ypos);
+                this.m_exitCells.push(innerNeighbor);
             }
             newCell.addEdge(innerNeighbor, ringEdge);
             this.m_edges.push(ringEdge);
 
-            if (isOuterRing) {
+            if (isOuterRing)
+            {
+                var outerExitCell = null;
+                if (cellIndex == ((ringCellCount / 2) | 0))
+                {
+                    outerExitCell = new Cell();
+                    var exitCenterX = Math.sin(leftAngle + theta * 0.5) * (ringOuterRadius + ringThickness * 0.5) + xpos;
+                    var exitCenterY = Math.cos(leftAngle + theta * 0.5) * (ringOuterRadius + ringThickness * 0.5) + ypos;
+                    outerExitCell.m_center = new Point(exitCenterX, exitCenterY);
+                    this.m_exitCells.push(outerExitCell);
+                }
                 var outerRingEdge = makeRingEdge(ringOuterRadius, leftAngle, theta, xpos, ypos, 1);
-                newCell.addEdge(null, outerRingEdge);
+                newCell.addEdge(outerExitCell, outerRingEdge);
                 this.m_edges.push(outerRingEdge);
             }
 

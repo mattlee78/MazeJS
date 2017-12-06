@@ -4,6 +4,7 @@
     this.m_cells = new Array();
     this.m_buildstack = new Set();
     this.m_buildarray = new Array();
+    this.m_exitCells = new Array();
 }
 
 Maze.prototype.clear = function ()
@@ -48,8 +49,23 @@ Maze.prototype.draw = function (c, xpos, ypos)
     c.stroke();
 }
 
-Maze.prototype.drawSolution = function (c, startCell)
+Maze.prototype.drawSolution = function (c)
 {
+    var startCell = null;
+    for (var exitCell of this.m_exitCells)
+    {
+        if (exitCell.m_openedFromCell != null)
+        {
+            startCell = exitCell;
+            break;
+        }
+    }
+
+    if (startCell == null)
+    {
+        return;
+    }
+
     c.beginPath();
 
     var cell = startCell;
@@ -58,8 +74,8 @@ Maze.prototype.drawSolution = function (c, startCell)
         var nextCell = cell.m_openedFromCell;
         if (nextCell != null)
         {
-            c.moveTo(cell.m_centerX, cell.m_centerY);
-            c.lineTo(nextCell.m_centerX, nextCell.m_centerY);
+            c.moveTo(cell.m_center.x, cell.m_center.y);
+            c.lineTo(nextCell.m_center.x, nextCell.m_center.y);
         }
         cell = nextCell;
     }
@@ -80,8 +96,9 @@ Maze.prototype.computeCellCenters = function ()
             cp.y += ec.y;
             ++pointCount;
         }
-        cell.m_centerX = cp.x / pointCount;
-        cell.m_centerY = cp.y / pointCount;
+        cp.x /= pointCount;
+        cp.y /= pointCount;
+        cell.m_center = cp;
     }
 }
 
@@ -130,22 +147,25 @@ Maze.prototype.build = function ()
 {
     this.m_buildstack.clear();
 
-    if (this.m_cells.length == 0)
+    if (this.m_cells.length == 0 || this.m_exitCells.length == 0)
     {
         return;
     }
 
-    var originCell = this.m_cells[0];
-    var neighborCount = originCell.m_neighborArray.length;
-    for (i = 0; i < neighborCount; ++i)
     {
-        if (originCell.m_neighborArray[i] == null)
+        var originCell = this.m_exitCells[0];
+        var firstNeighbor = originCell.m_neighborArray[0];
+        var neighborCount = firstNeighbor.m_neighborArray.length;
+        for (var i = 0; i < neighborCount; ++i)
         {
-            originCell.m_openEdgeMask |= (1 << i);
-            break;
+            if (firstNeighbor.m_neighborArray[i] == originCell)
+            {
+                firstNeighbor.openEdgeByIndex(i);
+                break;
+            }
         }
+        this.addUntouchedNeighbors(firstNeighbor);
     }
-    this.addUntouchedNeighbors(originCell);
 
     while (this.m_buildarray.length > 0)
     {

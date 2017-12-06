@@ -26,14 +26,44 @@ Edge.prototype.draw = function (c, xpos, ypos)
 
 Edge.prototype.getCenter = function ()
 {
-    var p = new Point(0, 0);
     var pointCount = this.points.length;
-    for (var i = 0; i < pointCount; ++i)
+    if (pointCount == 0)
     {
-        p.x += this.points[i].x;
-        p.y += this.points[i].y;
+        return new Point(0, 0);
     }
-    p.x /= pointCount;
-    p.y /= pointCount;
+    var p = new Point(0, 0);
+    p.x = this.points[0].x;
+    p.y = this.points[0].y;
+    if (pointCount >= 2)
+    {
+        p.x += this.points[pointCount - 1].x;
+        p.y += this.points[pointCount - 1].y;
+        p.x /= 2;
+        p.y /= 2;
+    }
     return p;
+}
+
+Edge.prototype.reflectPoint = function (p)
+{
+    var pointA = this.points[0];
+    var pointB = this.points[this.points.length - 1];
+
+    var ex = pointB.x - pointA.x;
+    var ey = pointB.y - pointA.y;
+    var edgeLength = Math.sqrt(ex * ex + ey * ey);
+    ex /= edgeLength;
+    ey /= edgeLength;
+
+    var vx = p.x - pointA.x;
+    var vy = p.y - pointA.y;
+
+    var dotprod = (ex * vx) + (ey * vy);
+    var alignedx = dotprod * ex;
+    var alignedy = dotprod * ey;
+    var perpx = vx - alignedx;
+    var perpy = vy - alignedy;
+
+    var newPoint = new Point(pointA.x + alignedx - perpx, pointA.y + alignedy - perpy);
+    return newPoint;
 }

@@ -69,6 +69,7 @@ function render()
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
 
+    c.lineCap = 'round';
     c.lineWidth = 5;
     c.strokeStyle = "#000000";
 
@@ -77,7 +78,7 @@ function render()
     c.lineWidth = 3;
     c.strokeStyle = "#ff0000";
 
-    //maze.drawSolution(c, maze.getLastCell());
+    maze.drawSolution(c);
 }
 
 onLoad();

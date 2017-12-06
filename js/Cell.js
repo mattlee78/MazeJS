@@ -1,7 +1,6 @@
 ﻿function Cell()
 {
-    this.m_centerX = 0;
-    this.m_centerY = 0;
+    this.m_center = new Point(0, 0);
     this.m_edgeArray = new Array();
     this.m_neighborArray = new Array();
     this.m_openEdgeMask = 0;
