@@ -78,7 +78,7 @@ function render()
     c.lineWidth = 3;
     c.strokeStyle = "#ff0000";
 
-    maze.drawSolution(c);
+    //maze.drawSolution(c);
 }
 
 onLoad();
