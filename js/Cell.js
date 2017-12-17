@@ -1,4 +1,6 @@
-﻿function Cell()
+﻿"use strict";
+
+function Cell()
 {
     this.m_center = new Point(0, 0);
     this.m_edgeArray = new Array();

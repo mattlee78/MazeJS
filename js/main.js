@@ -1,4 +1,6 @@
-﻿(function () {
+﻿"use strict";
+
+(function () {
 
     window.addEventListener("resize", resizeThrottler, false);
 
@@ -24,6 +26,7 @@
 }());
 
 var c = null;
+var canvas = null;
 var maze = null;
 var showSolution = false;
 
@@ -39,14 +42,34 @@ function onLoad()
     document.getElementById("buttonPrint").onclick = printMaze;
     document.getElementById("checkShowSolution").onclick = setDrawSolution;
     document.getElementById("buttonRebuild").onclick = rebuildMaze;
+    document.getElementById("selectMazeType").onchange = selectMazeType;
 
     maze = new Maze();
 
-    //maze.initRectangle(10, 10, 90);
-    maze.initCircle(10, 6, 60, 2);
+    maze.initRectangle(10, 10, 90);
 
     maze.build();
 
+    refresh();
+}
+
+function selectMazeType()
+{
+    var s = document.getElementById("selectMazeType");
+    var mt = s.value;
+    switch (mt)
+    {
+        case "rect":
+            maze.clear();
+            maze.initRectangle(10, 10, 90);
+            maze.build();
+            break;
+        case "circle":
+            maze.clear();
+            maze.initCircle(10, 6, 60, 2);
+            maze.build();
+            break;
+    }
     refresh();
 }
 
@@ -107,9 +130,6 @@ function setDrawSolution()
 
 function render()
 {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-
     c.lineCap = 'round';
     c.lineWidth = 5;
     c.strokeStyle = "#000000";

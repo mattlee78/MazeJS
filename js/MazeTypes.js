@@ -1,8 +1,13 @@
-﻿Maze.prototype.initRectangle = function (widthCells, heightCells, cellSize)
+﻿"use strict";
+
+Maze.prototype.initRectangle = function (widthCells, heightCells, cellSize)
 {
     var prevRow = null;
     var xpos = 0;
     var ypos = cellSize;
+
+    this.m_dimensions.x = xpos + widthCells * cellSize;
+    this.m_dimensions.y = ypos + heightCells * cellSize;
 
     for (var cellY = 0; cellY < heightCells; ++cellY)
     {
@@ -110,6 +115,9 @@ Maze.prototype.initCircle = function (innerRingCellCount, ringCount, ringThickne
     var totalRadius = centerRadius + (ringCount * ringThickness);
     var xpos = totalRadius;
     var ypos = totalRadius + ringThickness;
+
+    this.m_dimensions.x = xpos + totalRadius;
+    this.m_dimensions.y = ypos + totalRadius;
 
     for (var ringIndex = 0; ringIndex < ringCount; ++ringIndex)
     {

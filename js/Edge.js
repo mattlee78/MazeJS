@@ -1,4 +1,6 @@
-﻿function Edge(points, multiplier)
+﻿"use strict";
+
+function Edge(points, multiplier)
 {
     this.drawn = false;
     this.points = points;

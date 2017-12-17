@@ -1,16 +1,18 @@
-﻿function Maze()
+﻿"use strict";
+
+function Maze()
 {
-    this.m_edges = new Array();
-    this.m_cells = new Array();
+    this.clear();
     this.m_buildstack = new Set();
     this.m_buildarray = new Array();
-    this.m_exitCells = new Array();
 }
 
 Maze.prototype.clear = function ()
 {
-    this.m_edges.clear();
-    this.m_cells.clear();
+    this.m_edges = new Array();
+    this.m_cells = new Array();
+    this.m_exitCells = new Array();
+    this.m_dimensions = new Point(0, 0);
 }
 
 Maze.prototype.reset = function ()
@@ -207,4 +209,7 @@ Maze.prototype.build = function ()
         newCell.openEdgeByIndex(touchedNeighbors[neighborIndex]);
         this.addUntouchedNeighbors(newCell);
     }
+
+    canvas.width = this.m_dimensions.x + 10;
+    canvas.height = this.m_dimensions.y + 10;
 }
