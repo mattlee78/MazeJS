@@ -6,6 +6,45 @@
     <link href="css/default.css" rel="stylesheet" />
 </head>
 <body>
+    <div id="controlBar">
+        <table width="100%">
+            <tr>
+                <td align="left">
+                    <button id="buttonOptions">Hamburger</button>
+                </td>
+                <td width="*" align="right">
+                    <button id="buttonPrint">Print</button>
+                </td>
+            </tr>
+        </table>
+        <div id="optionsPanel" class="floating" hidden="true">
+            <div id="mazeTypeBar">
+                Maze Type:
+                <select id="selectMazeType">
+                    <option value="rect">Rectangular</option>
+                    <option value="circle">Circular</option>
+                </select>
+                <input type="checkbox" id="checkShowSolution" />Show Solution
+                <button id="buttonRebuild">Rebuild</button>
+            </div>
+            <div id="allMazeOptions">
+
+            </div>
+            <div id="rectMazeOptions">
+                <div>
+                    Width:
+                    <input type="number" id="width" />
+                </div>
+                <div>
+                    Height:
+                    <input type="number" id="height" />
+                </div>
+            </div>
+            <div id="circleMazeOptions">
+
+            </div>
+        </div>
+    </div>
     <div><canvas id="c"></canvas></div>
     <script src="js/Point.js"></script>
     <script src="js/Cell.js"></script>

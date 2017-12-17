@@ -13,6 +13,20 @@ Maze.prototype.clear = function ()
     this.m_cells.clear();
 }
 
+Maze.prototype.reset = function ()
+{
+    for (var cell of this.m_cells)
+    {
+        cell.m_openEdgeMask = 0;
+        cell.m_openedFromCell = null;
+    }
+    for (var cell of this.m_exitCells)
+    {
+        cell.m_openEdgeMask = 0;
+        cell.m_openedFromCell = null;
+    }
+}
+
 Maze.prototype.getLastCell = function ()
 {
     var cellCount = this.m_cells.length;

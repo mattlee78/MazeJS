@@ -3,3 +3,10 @@
   touch-action: manipulation;
   */
 }
+
+div.floating {
+    position: absolute;
+    left: 0px;
+    top: 50px;
+    z-index: 1;
+}
