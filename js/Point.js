@@ -1,8 +1,11 @@
 ﻿"use strict";
 
-function Point(x, y)
+class Point
 {
-    this.x = x;
-    this.y = y;
+    constructor(x, y)
+    {
+        this.x = x;
+        this.y = y;
+    }
 }
 

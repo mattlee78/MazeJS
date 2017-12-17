@@ -4,10 +4,10 @@ Maze.prototype.initRectangle = function (widthCells, heightCells, cellSize)
 {
     var prevRow = null;
     var xpos = 0;
-    var ypos = cellSize;
+    var ypos = cellSize / 2;
 
     this.m_dimensions.x = xpos + widthCells * cellSize;
-    this.m_dimensions.y = ypos + heightCells * cellSize;
+    this.m_dimensions.y = ypos + (heightCells + 0.5) * cellSize;
 
     for (var cellY = 0; cellY < heightCells; ++cellY)
     {

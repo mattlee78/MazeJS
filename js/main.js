@@ -25,30 +25,32 @@
     }
 }());
 
-var c = null;
-var canvas = null;
-var maze = null;
-var showSolution = false;
+var g_c = null;
+var g_canvas = null;
+var g_maze = null;
+var g_showSolution = false;
+const g_printWidth = 1100;
+const g_printHeight = 1500;
 
 function onLoad()
 {
-    canvas = document.getElementById("c");
-    c = canvas.getContext("2d");
+    g_canvas = document.getElementById("c");
+    g_c = g_canvas.getContext("2d");
 
     window.onbeforeprint = hideControls;
     window.onafterprint = showControls;
 
     document.getElementById("buttonOptions").onclick = showHideOptions;
     document.getElementById("buttonPrint").onclick = printMaze;
-    document.getElementById("checkShowSolution").onclick = setDrawSolution;
+    document.getElementById("checkShowSolution").onchange = setDrawSolution;
     document.getElementById("buttonRebuild").onclick = rebuildMaze;
     document.getElementById("selectMazeType").onchange = selectMazeType;
 
-    maze = new Maze();
+    g_maze = new Maze();
 
-    maze.initRectangle(10, 10, 90);
+    g_maze.initRectangle(10, 13, g_printWidth/10);
 
-    maze.build();
+    g_maze.build();
 
     refresh();
 }
@@ -60,14 +62,14 @@ function selectMazeType()
     switch (mt)
     {
         case "rect":
-            maze.clear();
-            maze.initRectangle(10, 10, 90);
-            maze.build();
+            g_maze.clear();
+            g_maze.initRectangle(10, 13, g_printWidth/10);
+            g_maze.build();
             break;
         case "circle":
-            maze.clear();
-            maze.initCircle(10, 6, 60, 2);
-            maze.build();
+            g_maze.clear();
+            g_maze.initCircle(10, 6, 60, 2);
+            g_maze.build();
             break;
     }
     refresh();
@@ -93,10 +95,10 @@ function showControls()
 
 function rebuildMaze()
 {
-    if (maze != null)
+    if (g_maze != null)
     {
-        maze.reset();
-        maze.build();
+        g_maze.reset();
+        g_maze.build();
         refresh();
     }
 }
@@ -105,9 +107,6 @@ function refresh()
 {
     window.requestAnimationFrame(render);
 }
-
-function mouseX(e) { return e.clientX - e.target.offsetLeft; }
-function mouseY(e) { return e.clientY - e.target.offsetTop; }
 
 function printMaze()
 {
@@ -123,25 +122,27 @@ function printMaze()
 
 function setDrawSolution()
 {
-    var checkbox = document.getElementById("checkShowSolution");
-    showSolution = checkbox.checked;
+    g_showSolution = this.checked;
     refresh();
 }
 
 function render()
 {
-    c.lineCap = 'round';
-    c.lineWidth = 5;
-    c.strokeStyle = "#000000";
+    g_canvas.width = g_maze.m_dimensions.x + 10;
+    g_canvas.height = g_maze.m_dimensions.y + 10;
 
-    maze.draw(c, 5, 5);
+    g_c.lineCap = 'round';
+    g_c.lineWidth = 5;
+    g_c.strokeStyle = "#000000";
 
-    c.lineWidth = 3;
-    c.strokeStyle = "#ff0000";
+    g_maze.draw(g_c, 5, 5);
 
-    if (showSolution)
+    g_c.lineWidth = 3;
+    g_c.strokeStyle = "#ff0000";
+
+    if (g_showSolution)
     {
-        maze.drawSolution(c);
+        g_maze.drawSolution(g_c);
     }
 }
 
