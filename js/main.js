@@ -58,11 +58,6 @@ function onLoad()
 
     document.getElementById("buttonOptions").onclick = showHideOptions;
     document.getElementById("buttonPrint").onclick = printMaze;
-    /*
-    document.getElementById("checkShowSolution").onchange = setDrawSolution;
-    document.getElementById("buttonRebuild").onclick = rebuildMaze;
-    document.getElementById("selectMazeType").onchange = selectMazeType;
-    */
 
     g_props = createMazeProperties(rebuildMazeNewOptions);
     var gp = g_props.general;
@@ -77,21 +72,17 @@ function onLoad()
 
     g_maze = new Maze();
     selectMazeType(gp.mazeType);
-
-    /*
-    g_maze.init(g_props, g_printWidth);
-    g_maze.build();
-
-    refresh();
-    */
 }
 
 function rebuildMazeNewOptions()
 {
-    g_maze.clear();
-    g_maze.init(g_props, g_printWidth);
-    g_maze.build();
-    refresh();
+    if (g_maze != null)
+    {
+        g_maze.clear();
+        g_maze.init(g_props, g_printWidth);
+        g_maze.build();
+        refresh();
+    }
 }
 
 function selectMazeType(props)

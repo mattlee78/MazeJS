@@ -227,6 +227,9 @@ function buildGroupUI(rootElement, props)
             if (v != null)
             {
                 switch (v.displayType) {
+                    case "category":
+                        buildGroupUI(groupDiv, v);
+                        break;
                     case "boolean":
                         buildBooleanUI(groupDiv, v);
                         break;
