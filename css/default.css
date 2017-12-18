@@ -6,7 +6,15 @@
 
 div.floating {
     position: absolute;
-    left: 0px;
+    left: 10px;
     top: 50px;
     z-index: 1;
+}
+
+div.grouptitle {
+    font-size: 150%;
+}
+
+input.numberinput {
+    width: 50px;
 }

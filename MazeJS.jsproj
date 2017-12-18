@@ -73,6 +73,7 @@
     <Content Include="js\Maze.js" />
     <Content Include="js\MazeTypes.js" />
     <Content Include="js\Point.js" />
+    <Content Include="js\Properties.js" />
     <None Include="MazeJS_TemporaryKey.pfx" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\$(WMSJSProjectDirectory)\Microsoft.VisualStudio.$(WMSJSProject).targets" />
