@@ -18,7 +18,12 @@ function createMazeProperties(mazeChangeCallback)
     cp.addInteger("ringCount", "Ring Count", 6, 1, 100);
     cp.addInteger("centerRadius", "Center Radius in Rings", 2, 1, 10);
 
-    var mazeTypeArray = [rp, cp];
+    var hp = p.addCategory("hex", "Honeycomb", mazeChangeCallback);
+    hp.isMaze = true;
+    hp.addInteger("widthCells", "Width in Cells", 10, 1, 250);
+    hp.addInteger("heightCells", "Height in Cells", 10, 1, 250);
+
+    var mazeTypeArray = [rp, cp, hp];
     mazeTypeEnum.enumArray = mazeTypeArray;
     mazeTypeEnum.value = mazeTypeArray[0];
 
@@ -45,6 +50,11 @@ Maze.prototype.init = function (props, printWidth)
         case "circle":
             {
                 this.initCircle(mt, mazeWidth);
+                break;
+            }
+        case "hex":
+            {
+                this.initHex(mt, mazeWidth);
                 break;
             }
     }
@@ -106,7 +116,7 @@ Maze.prototype.initRectangle = function (props, mazeWidth)
             if (cellX >= (props.widthCells.value - 1))
             {
                 var rightEdge = new Edge([new Point(rightX, topY), new Point(rightX, bottomY)], 1);
-                newCell.addEdge(bottomExitCell, rightEdge);
+                newCell.addEdge(null, rightEdge);
                 this.m_edges.push(rightEdge);
             }
 
@@ -257,6 +267,159 @@ Maze.prototype.initCircle = function (props, mazeWidth)
 
         prevRing = null;
         prevRing = currentRing;
+    }
+
+    this.computeCellCenters();
+}
+
+Maze.prototype.initHex = function (props, mazeWidth)
+{
+    //     A
+    //   /   \
+    // F       B
+    // |   +   |
+    // E       C
+    //   \   / 
+    //     D
+
+    // cellSize is the width of a hex cell (F-B and E-C)
+    const cellSize = mazeWidth / (props.widthCells.value + 0.5);
+
+    const cellHalfWidth = cellSize / 2;
+
+    // cellCornerHeight is the y height from the center of the hex to the left and right corners (F, B, E, C)
+    const cellCornerHeight = cellHalfWidth / Math.sqrt(3);
+
+    // cellHalfHeight is the y height from the center of the hex to the top and bottom corners (A, D)
+    const cellHalfHeight = cellCornerHeight * 2;
+    const cellRowSpacing = cellHalfHeight + cellCornerHeight;
+
+    var prevRow = null;
+    var xpos = 0;
+    var ypos = cellHalfHeight;
+
+    this.m_dimensions.x = xpos + (props.widthCells.value + 0.5) * cellSize;
+    this.m_dimensions.y = ypos + ((props.heightCells.value + 1) * cellRowSpacing);
+
+    for (var cellY = 0; cellY < props.heightCells.value; ++cellY)
+    {
+        var currentRow = new Array();
+        var leftNeighbor = null;
+
+        // topY is the ypos of corner A
+        const topY = ypos + (cellY * cellRowSpacing);
+
+        // bottomY is the ypos of corner D
+        const bottomY = topY + (cellHalfHeight * 2);
+
+        // topCornerY is the ypos of corners F and B
+        const topCornerY = topY + cellCornerHeight;
+
+        // bottomCornerY is the ypos of corners E and C
+        const bottomCornerY = topCornerY + cellHalfHeight;
+
+        // insetRow is true if this row is inset from the left edge by half a cell (odd numbered rows)
+        var offsetX = 0;
+        var insetRow = false;
+        if (cellY % 2 == 1)
+        {
+            offsetX = cellHalfWidth;
+            insetRow = true;
+        }
+
+        const isBottomRow = (cellY >= (props.heightCells.value - 1));
+
+        for (var cellX = 0; cellX < props.widthCells.value; ++cellX)
+        {
+            const isRightColumn = (cellX >= (props.widthCells.value - 1));
+
+            const leftX = cellX * cellSize + xpos + offsetX;
+            const centerX = leftX + cellHalfWidth;
+            const rightX = leftX + cellSize;
+
+            var edgeEF = new Edge([new Point(leftX, topCornerY), new Point(leftX, bottomCornerY)], 1);
+            var edgeFA = new Edge([new Point(leftX, topCornerY), new Point(centerX, topY)], 1);
+            var edgeAB = new Edge([new Point(centerX, topY), new Point(rightX, topCornerY)], 1);
+
+            var newCell = new Cell();
+            currentRow.push(newCell);
+            this.m_cells.push(newCell);
+
+            // topLeftCell is the cell adjoining edge F-A
+            var topLeftCell = null;
+
+            // topRightCell is the cell adjoining edge A-B
+            var topRightCell = null;
+
+            if (prevRow != null)
+            {
+                if (insetRow)
+                {
+                    topLeftCell = prevRow[cellX];
+                    topRightCell = prevRow[cellX + 1];
+                }
+                else
+                {
+                    topLeftCell = prevRow[cellX - 1];
+                    topRightCell = prevRow[cellX];
+                }
+            }
+            else if (cellX == 0)
+            {
+                topLeftCell = new Cell();
+                topLeftCell.m_center = new Point(leftX, topY - cellCornerHeight);
+                this.m_exitCells.push(topLeftCell);
+            }
+            newCell.addEdge(topLeftCell, edgeFA);
+            newCell.addEdge(topRightCell, edgeAB);
+            this.m_edges.push(edgeFA);
+            this.m_edges.push(edgeAB);
+
+            newCell.addEdge(leftNeighbor, edgeEF);
+            this.m_edges.push(edgeEF);
+
+            var edgeCD = new Edge([new Point(rightX, bottomCornerY), new Point(centerX, bottomY)], 1);
+            var edgeDE = new Edge([new Point(centerX, bottomY), new Point(leftX, bottomCornerY)], 1);
+
+            if (isRightColumn)
+            {
+                var edgeBC = new Edge([new Point(rightX, topCornerY), new Point(rightX, bottomCornerY)], 1);
+                newCell.addEdge(null, edgeBC);
+                this.m_edges.push(edgeBC);
+
+                if (insetRow && !isBottomRow)
+                {
+                    newCell.addEdge(null, edgeCD);
+                    this.m_edges.push(edgeCD);
+                }
+            }
+
+            if (isBottomRow)
+            {
+                var bottomExitCell = null;
+
+                if (isRightColumn)
+                {
+                    bottomExitCell = new Cell();
+                    bottomExitCell.m_center = new Point(rightX, bottomY + cellCornerHeight);
+                    this.m_exitCells.push(bottomExitCell);
+                }
+
+                newCell.addEdge(bottomExitCell, edgeCD);
+                this.m_edges.push(edgeCD);
+            }
+
+            if (isBottomRow || (cellX == 0 && !insetRow))
+            {
+                newCell.addEdge(null, edgeDE);
+                this.m_edges.push(edgeDE);
+            }
+
+            leftNeighbor = newCell;
+        }
+
+        prevRow = null;
+        prevRow = currentRow;
     }
 
     this.computeCellCenters();
