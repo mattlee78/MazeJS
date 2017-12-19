@@ -34,22 +34,6 @@ const g_printHeight = 1500;
 
 function onLoad()
 {
-    {
-        var testobj = new Object();
-        testobj["width"] = 5;
-        testobj["height"] = 5;
-        testobj["radius"] = 5;
-        var w = testobj.width;
-        console.log('width is ' + w);
-        for (var prop in testobj)
-        {
-            if (testobj.hasOwnProperty(prop))
-            {
-                console.log('property: ' + prop + ' = ' + testobj[prop]);
-            }
-        }
-    }
-
     g_canvas = document.getElementById("c");
     g_c = g_canvas.getContext("2d");
 
