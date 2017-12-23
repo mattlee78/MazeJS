@@ -6,6 +6,8 @@
 
 div.floating {
     position: absolute;
+    background-color: white;
+    border: 5px solid gray;
     left: 10px;
     top: 50px;
     z-index: 1;
