@@ -15,6 +15,7 @@ class Maze
         this.m_cells = new Array();
         this.m_exitCells = new Array();
         this.m_dimensions = new Point(0, 0);
+        this.m_barriers = new Array();
     }
 
     reset()
@@ -28,6 +29,28 @@ class Maze
         {
             cell.m_openEdgeMask = 0;
             cell.m_openedFromCell = null;
+        }
+    }
+
+    addEdgeFiltered(originCell, neighborCell, edge)
+    {
+        if (neighborCell != null && this.m_barriers.length > 0)
+        {
+            var connectEdge = new Edge([originCell.m_center, neighborCell.m_center], 1);
+            for (var barrierEdge of this.m_barriers)
+            {
+                if (connectEdge.intersects(barrierEdge))
+                {
+                    originCell.addEdge(null, edge);
+                    neighborCell.addEdge(null, edge);
+                    return;
+                }
+            }
+            originCell.addEdge(neighborCell, edge);
+        }
+        else
+        {
+            originCell.addEdge(neighborCell, edge);
         }
     }
 

@@ -1,5 +1,10 @@
 ﻿"use strict";
 
+function cross2d(ax, ay, bx, by)
+{
+    return (ax * by) - (ay * bx);
+}
+
 class Edge
 {
     constructor(points, multiplier)
@@ -70,5 +75,53 @@ class Edge
 
         var newPoint = new Point(pointA.x + alignedx - perpx, pointA.y + alignedy - perpy);
         return newPoint;
+    }
+
+    intersects(otherEdge) {
+        var pointEA = this.points[0];
+        var pointEB = this.points[this.points.length - 1];
+        var ax = pointEB.x - pointEA.x;
+        var ay = pointEB.y - pointEA.y;
+        var pointOA = otherEdge.points[0];
+        var pointOB = otherEdge.points[otherEdge.points.length - 1];
+        var bx = pointOB.x - pointOA.x;
+        var by = pointOB.y - pointOA.y;
+        var cx = pointEA.x - pointOA.x;
+        var cy = pointEA.y - pointOA.y;
+
+        var m = cross2d(ax, ay, bx, by);
+        var n = cross2d(bx, by, cx, cy);
+
+        if (Math.abs(m) < 0.0001 || Math.abs(n) < 0.0001)
+        {
+            return false;
+        }
+
+        var s = n / m;
+
+        var ix = s * ax + pointEA.x;
+        var iy = s * ay + pointEA.y;
+
+        if (s < 0 || s >= 1)
+        {
+            return false;
+        }
+
+        var r = -1;
+        if (bx > 0)
+        {
+            r = (ix - pointOA.x) / bx;
+        }
+        else
+        {
+            r = (iy - pointOA.y) / by;
+        }
+
+        if (r < 0 || r >= 1)
+        {
+            return false;
+        }
+
+        return true;
     }
 }

@@ -11,17 +11,20 @@ function createMazeProperties(mazeChangeCallback)
     rp.isMaze = true;
     rp.addInteger("widthCells", "Width in Cells", 10, 1, 250);
     rp.addInteger("heightCells", "Height in Cells", 10, 1, 250);
+    rp.addInteger("difficulty", "Difficulty", 2, 1, 5);
 
     var cp = p.addCategory("circle", "Circular", mazeChangeCallback);
     cp.isMaze = true;
     cp.addInteger("innerRingCellCount", "Inner Ring Cell Count", 10, 4, 36);
     cp.addInteger("ringCount", "Ring Count", 6, 1, 100);
     cp.addInteger("centerRadius", "Center Radius in Rings", 2, 1, 10);
+    cp.addInteger("difficulty", "Difficulty", 2, 1, 5);
 
     var hp = p.addCategory("hex", "Honeycomb", mazeChangeCallback);
     hp.isMaze = true;
     hp.addInteger("widthCells", "Width in Cells", 10, 1, 250);
     hp.addInteger("heightCells", "Height in Cells", 10, 1, 250);
+    hp.addInteger("difficulty", "Difficulty", 2, 1, 5);
 
     var mazeTypeArray = [rp, cp, hp];
     mazeTypeEnum.enumArray = mazeTypeArray;
@@ -70,6 +73,14 @@ Maze.prototype.initRectangle = function (props, mazeWidth)
     this.m_dimensions.x = xpos + props.widthCells.value * cellSize;
     this.m_dimensions.y = ypos + (props.heightCells.value + 0.5) * cellSize;
 
+    if (props.difficulty.value > 1)
+    {
+        var thirdwidth = this.m_dimensions.x / 3;
+        var thirdheight = this.m_dimensions.y / 3;
+        this.m_barriers.push(new Edge([new Point(thirdwidth, 0), new Point(thirdwidth, thirdheight * 2)]));
+        this.m_barriers.push(new Edge([new Point(thirdwidth * 2, thirdheight), new Point(thirdwidth * 2, thirdheight * 3)]));
+    }
+
     for (var cellY = 0; cellY < props.heightCells.value; ++cellY)
     {
         var currentRow = new Array();
@@ -89,13 +100,14 @@ Maze.prototype.initRectangle = function (props, mazeWidth)
             var topEdge = new Edge([new Point(leftX, topY), new Point(rightX, topY)], 1);
 
             var newCell = new Cell();
+            newCell.m_center = new Point(leftX + cellSize / 2, topY + cellSize / 2);
             currentRow.push(newCell);
             this.m_cells.push(newCell);
 
             if (prevRow != null)
             {
                 var aboveCell = prevRow[cellX];
-                newCell.addEdge(aboveCell, topEdge);
+                this.addEdgeFiltered(newCell, aboveCell, topEdge);
             }
             else
             {
@@ -110,7 +122,7 @@ Maze.prototype.initRectangle = function (props, mazeWidth)
             }
             this.m_edges.push(topEdge);
 
-            newCell.addEdge(leftNeighbor, leftEdge);
+            this.addEdgeFiltered(newCell, leftNeighbor, leftEdge);
             this.m_edges.push(leftEdge);
 
             if (cellX >= (props.widthCells.value - 1))
@@ -184,6 +196,32 @@ Maze.prototype.initCircle = function (props, mazeWidth)
     this.m_dimensions.x = xpos + totalRadius;
     this.m_dimensions.y = ypos + totalRadius;
 
+    if (props.difficulty.value > 1)
+    {
+        var thirdRadius = (totalRadius - centerRadius) / 3;
+        var innerRadius = centerRadius + thirdRadius;
+        var outerRadius = totalRadius - thirdRadius;
+        var spokeCount = ((props.difficulty.value - 1) * 2) + 1;
+        var spokeTheta = (Math.PI * 2) / spokeCount;
+        for (var spokeIndex = 0; spokeIndex < spokeCount; ++spokeIndex)
+        {
+            var theta = (spokeIndex + 0) * spokeTheta;
+            var ir = 0;
+            var or = 0;
+            if (spokeIndex % 2 == 0)
+            {
+                ir = innerRadius;
+                or = totalRadius;
+            }
+            else
+            {
+                ir = 0;
+                or = outerRadius;
+            }
+            this.m_barriers.push(new Edge([new Point(Math.sin(theta) * ir, Math.cos(theta) * ir), new Point(Math.sin(theta) * or, Math.cos(theta) * or)]));
+        }
+    }
+
     for (var ringIndex = 0; ringIndex < props.ringCount.value; ++ringIndex)
     {
         var isOuterRing = (ringIndex >= (props.ringCount.value - 1));
@@ -213,10 +251,14 @@ Maze.prototype.initCircle = function (props, mazeWidth)
             var outerLeftPosX = Math.sin(leftAngle) * ringOuterRadius + xpos;
             var outerLeftPosY = Math.cos(leftAngle) * ringOuterRadius + ypos;
 
+            var cpAngle = (leftAngle + rightAngle) / 2;
+            var cpRadius = (ringInnerRadius + ringOuterRadius) / 2;
+
             var ringEdge = makeRingEdge(ringInnerRadius, leftAngle, theta, xpos, ypos, 1);
             var spokeEdge = new Edge([new Point(innerLeftPosX, innerLeftPosY), new Point(outerLeftPosX, outerLeftPosY)], 10);
 
             var newCell = new Cell();
+            newCell.m_center = new Point(Math.sin(cpAngle) * cpRadius, Math.cos(cpAngle) * cpRadius);
             this.m_cells.push(newCell);
             currentRing.push(newCell);
             if (firstRingCell == null)
@@ -224,7 +266,7 @@ Maze.prototype.initCircle = function (props, mazeWidth)
                 firstRingCell = newCell;
             }
 
-            newCell.addEdge(leftNeighborCell, spokeEdge);
+            this.addEdgeFiltered(newCell, leftNeighborCell, spokeEdge);
             this.m_edges.push(spokeEdge);
 
             var innerNeighbor = null;
@@ -238,7 +280,7 @@ Maze.prototype.initCircle = function (props, mazeWidth)
                 innerNeighbor.m_center = new Point(xpos, ypos);
                 this.m_exitCells.push(innerNeighbor);
             }
-            newCell.addEdge(innerNeighbor, ringEdge);
+            this.addEdgeFiltered(newCell, innerNeighbor, ringEdge);
             this.m_edges.push(ringEdge);
 
             if (isOuterRing)
@@ -301,6 +343,14 @@ Maze.prototype.initHex = function (props, mazeWidth)
     this.m_dimensions.x = xpos + (props.widthCells.value + 0.5) * cellSize;
     this.m_dimensions.y = ypos + ((props.heightCells.value + 1) * cellRowSpacing);
 
+    if (props.difficulty.value > 1)
+    {
+        var thirdwidth = this.m_dimensions.x / 3;
+        var thirdheight = this.m_dimensions.y / 3;
+        this.m_barriers.push(new Edge([new Point(thirdwidth, 0), new Point(thirdwidth, thirdheight * 2)]));
+        this.m_barriers.push(new Edge([new Point(thirdwidth * 2, thirdheight), new Point(thirdwidth * 2, thirdheight * 3)]));
+    }
+
     for (var cellY = 0; cellY < props.heightCells.value; ++cellY)
     {
         var currentRow = new Array();
@@ -342,6 +392,7 @@ Maze.prototype.initHex = function (props, mazeWidth)
             var edgeAB = new Edge([new Point(centerX, topY), new Point(rightX, topCornerY)], 1);
 
             var newCell = new Cell();
+            newCell.m_center = new Point(centerX, (topCornerY + bottomCornerY) / 2);
             currentRow.push(newCell);
             this.m_cells.push(newCell);
 
@@ -370,12 +421,12 @@ Maze.prototype.initHex = function (props, mazeWidth)
                 topLeftCell.m_center = new Point(leftX, topY - cellCornerHeight);
                 this.m_exitCells.push(topLeftCell);
             }
-            newCell.addEdge(topLeftCell, edgeFA);
-            newCell.addEdge(topRightCell, edgeAB);
+            this.addEdgeFiltered(newCell, topLeftCell, edgeFA);
+            this.addEdgeFiltered(newCell, topRightCell, edgeAB);
             this.m_edges.push(edgeFA);
             this.m_edges.push(edgeAB);
 
-            newCell.addEdge(leftNeighbor, edgeEF);
+            this.addEdgeFiltered(newCell, leftNeighbor, edgeEF);
             this.m_edges.push(edgeEF);
 
             var edgeCD = new Edge([new Point(rightX, bottomCornerY), new Point(centerX, bottomY)], 1);
