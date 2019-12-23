@@ -11,20 +11,20 @@ function createMazeProperties(mazeChangeCallback)
     rp.isMaze = true;
     rp.addInteger("widthCells", "Width in Cells", 10, 1, 250);
     rp.addInteger("heightCells", "Height in Cells", 10, 1, 250);
-    rp.addInteger("difficulty", "Difficulty", 2, 1, 5);
+    rp.addInteger("difficulty", "Difficulty", 1, 1, 5);
 
     var cp = p.addCategory("circle", "Circular", mazeChangeCallback);
     cp.isMaze = true;
     cp.addInteger("innerRingCellCount", "Inner Ring Cell Count", 10, 4, 36);
     cp.addInteger("ringCount", "Ring Count", 6, 1, 100);
     cp.addInteger("centerRadius", "Center Radius in Rings", 2, 1, 10);
-    cp.addInteger("difficulty", "Difficulty", 2, 1, 5);
+    cp.addInteger("difficulty", "Difficulty", 1, 1, 5);
 
     var hp = p.addCategory("hex", "Honeycomb", mazeChangeCallback);
     hp.isMaze = true;
     hp.addInteger("widthCells", "Width in Cells", 10, 1, 250);
     hp.addInteger("heightCells", "Height in Cells", 10, 1, 250);
-    hp.addInteger("difficulty", "Difficulty", 2, 1, 5);
+    hp.addInteger("difficulty", "Difficulty", 1, 1, 5);
 
     var mazeTypeArray = [rp, cp, hp];
     mazeTypeEnum.enumArray = mazeTypeArray;

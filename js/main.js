@@ -42,12 +42,15 @@ function onLoad()
 
     document.getElementById("buttonOptions").onclick = showHideOptions;
     document.getElementById("buttonPrint").onclick = printMaze;
+    document.addEventListener("keydown", handleKeyDown);
 
     g_props = createMazeProperties(rebuildMazeNewOptions);
     var gp = g_props.general;
     gp.mazeType.changeCallback = selectMazeType;
-    gp.addBoolean("showSolution", "Show Solution", false, refresh);
+    gp.addBoolean("showSolution", "Show Solution", true, refresh);
     gp.addButton("rebuildButton", "Rebuild Maze", rebuildMaze);
+    gp.addBoolean("incrementalBuild", "Incremental Build", false, rebuildMaze);
+    gp.addButton("stepButton", "Build Step", stepMaze);
     gp.addInteger("lineWidth", "Line Width", 5, 1, 10, refresh);
     gp.addInteger("pageWidth", "Page Width of Maze (Percent)", 100, 10, 100, rebuildMazeNewOptions);
 
@@ -56,6 +59,23 @@ function onLoad()
 
     g_maze = new Maze();
     selectMazeType(gp.mazeType);
+}
+
+function handleKeyDown(event)
+{
+    switch (event.keyCode)
+    {
+        case 73:
+            g_props.general.incrementalBuild.value = !g_props.general.incrementalBuild.value;
+            rebuildMaze();
+            break;
+        case 82:
+            rebuildMaze();
+            break;
+        case 83:
+            stepMaze();
+            break;
+    }
 }
 
 function rebuildMazeNewOptions()
@@ -103,7 +123,16 @@ function rebuildMaze()
     if (g_maze != null)
     {
         g_maze.reset();
-        g_maze.build();
+        g_maze.build(g_props.general.incrementalBuild.value);
+        refresh();
+    }
+}
+
+function stepMaze()
+{
+    if (g_maze != null)
+    {
+        g_maze.buildStep();
         refresh();
     }
 }

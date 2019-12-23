@@ -75,6 +75,15 @@ class Maze
 
         for (var cell of this.m_cells)
         {
+            if (cell.m_openEdgeMask == 0)
+            {
+                c.moveTo(cell.m_center.x-2, cell.m_center.y-2);
+                c.lineTo(cell.m_center.x+2, cell.m_center.y+2);
+                c.moveTo(cell.m_center.x - 2, cell.m_center.y + 2);
+                c.lineTo(cell.m_center.x + 2, cell.m_center.y - 2);
+                continue;
+            }
+
             var edgeCount = cell.m_edgeArray.length;
             for (var i = 0; i < edgeCount; ++i)
             {
@@ -160,31 +169,44 @@ class Maze
 
     getUntouchedCell()
     {
-        if (this.m_buildarray.length == 0)
+        var count = this.m_buildarray.length;
+
+        if (count == 0)
         {
             return null;
         }
 
-        var count = this.m_buildarray.length;
-        var shufflecount = count / 2;
-        for (var i = 0; i < shufflecount; ++i)
-        {
-            var indexa = (Math.random() * count) | 0;
-            var indexb = (Math.random() * count) | 0;
-            if (indexa != indexb)
-            {
-                var temp = this.m_buildarray[indexa];
-                this.m_buildarray[indexa] = this.m_buildarray[indexb];
-                this.m_buildarray[indexb] = temp;
+        var item = null;
+
+        if (0) {
+            var shufflecount = count / 2;
+            for (var i = 0; i < shufflecount; ++i) {
+                var indexa = (Math.random() * count) | 0;
+                var indexb = (Math.random() * count) | 0;
+                if (indexa != indexb) {
+                    var temp = this.m_buildarray[indexa];
+                    this.m_buildarray[indexa] = this.m_buildarray[indexb];
+                    this.m_buildarray[indexb] = temp;
+                }
             }
+
+            item = this.m_buildarray.pop();
+            this.m_buildstack.delete(item);
+        }
+        else
+        {
+            var factor = 1.5;
+            var index = ((Math.random() * factor) | 0) % count;
+            var itemindex = count - index - 1;
+            item = this.m_buildarray[itemindex];
+            this.m_buildarray.splice(itemindex, 1);
+            this.m_buildstack.delete(item);
         }
 
-        var item = this.m_buildarray.pop();
-        this.m_buildstack.delete(item);
         return item;
     }
 
-    build()
+    build(incremental)
     {
         this.m_buildstack.clear();
 
@@ -208,31 +230,41 @@ class Maze
             this.addUntouchedNeighbors(firstNeighbor);
         }
 
-        while (this.m_buildarray.length > 0)
+        while (!incremental && this.buildStep()) { }
+    }
+
+    buildStep()
+    {
+        if (this.m_buildarray.length == 0)
         {
-            var newCell = this.getUntouchedCell();
-            if (newCell == null)
+            return false;
+        }
+
+        var newCell = this.getUntouchedCell();
+        if (newCell == null)
+        {
+            return false;
+        }
+
+        var touchedNeighbors = new Array();
+        var neighborCount = newCell.m_neighborArray.length;
+        for (var i = 0; i < neighborCount; ++i)
+        {
+            var neighbor = newCell.m_neighborArray[i];
+            if (neighbor != null && neighbor.hasBeenTouched())
             {
-                break;
-            }
-            var touchedNeighbors = new Array();
-            var neighborCount = newCell.m_neighborArray.length;
-            for (var i = 0; i < neighborCount; ++i)
-            {
-                var neighbor = newCell.m_neighborArray[i];
-                if (neighbor != null && neighbor.hasBeenTouched())
+                var edge = newCell.m_edgeArray[i];
+                for (var j = 0; j < edge.multiplier; ++j)
                 {
-                    var edge = newCell.m_edgeArray[i];
-                    for (var j = 0; j < edge.multiplier; ++j)
-                    {
-                        touchedNeighbors.push(i);
-                    }
+                    touchedNeighbors.push(i);
                 }
             }
-            var touchedNeighborCount = touchedNeighbors.length;
-            var neighborIndex = (Math.random() * touchedNeighborCount) | 0;
-            newCell.openEdgeByIndex(touchedNeighbors[neighborIndex]);
-            this.addUntouchedNeighbors(newCell);
         }
+        var touchedNeighborCount = touchedNeighbors.length;
+        var neighborIndex = (Math.random() * touchedNeighborCount) | 0;
+        newCell.openEdgeByIndex(touchedNeighbors[neighborIndex]);
+        this.addUntouchedNeighbors(newCell);
+
+        return true;
     }
 }
