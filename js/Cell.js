@@ -33,6 +33,10 @@ class Cell
         if ((this.m_openEdgeMask & mask) == 0) {
             this.m_openEdgeMask |= mask;
             var neighbor = this.m_neighborArray[index];
+            if (neighbor == null)
+            {
+                throw "Null neighbor";
+            }
             neighbor.openEdge(this);
             this.m_openedFromCell = neighbor;
         }

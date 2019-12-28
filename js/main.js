@@ -162,8 +162,10 @@ function render()
     g_c.lineCap = 'round';
     g_c.lineWidth = g_props.general.lineWidth.value;
     g_c.strokeStyle = "#000000";
+    
+    g_c.fillStyle = 'black';
 
-    g_maze.draw(g_c, 5, 5);
+    g_maze.draw(g_c, 5, 5, g_props.general.incrementalBuild.value);
 
     if (g_props.general.showSolution.value)
     {

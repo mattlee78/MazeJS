@@ -30,6 +30,8 @@ class Maze
             cell.m_openEdgeMask = 0;
             cell.m_openedFromCell = null;
         }
+        this.m_buildstack = new Set();
+        this.m_buildarray = new Array();
     }
 
     addEdgeFiltered(originCell, neighborCell, edge)
@@ -64,7 +66,7 @@ class Maze
         return null;
     }
 
-    draw(c, xpos, ypos)
+    draw(c, xpos, ypos, incremental)
     {
         for (var edge of this.m_edges)
         {
@@ -77,10 +79,13 @@ class Maze
         {
             if (cell.m_openEdgeMask == 0)
             {
-                c.moveTo(cell.m_center.x-2, cell.m_center.y-2);
-                c.lineTo(cell.m_center.x+2, cell.m_center.y+2);
-                c.moveTo(cell.m_center.x - 2, cell.m_center.y + 2);
-                c.lineTo(cell.m_center.x + 2, cell.m_center.y - 2);
+                if (0)
+                {
+                    c.moveTo(cell.m_center.x-2, cell.m_center.y-2);
+                    c.lineTo(cell.m_center.x+2, cell.m_center.y+2);
+                    c.moveTo(cell.m_center.x - 2, cell.m_center.y + 2);
+                    c.lineTo(cell.m_center.x + 2, cell.m_center.y - 2);
+                }
                 continue;
             }
 
@@ -97,6 +102,17 @@ class Maze
         }
 
         c.stroke();
+        
+        if (incremental)
+        {
+            var index = 0;
+            c.font = '12px sans-serif';
+            for (var cell of this.m_buildarray)
+            {
+                c.fillText(index.toString(), cell.m_center.x, cell.m_center.y);
+                index++;
+            }
+        }
     }
 
     drawSolution(c)
@@ -195,7 +211,7 @@ class Maze
         }
         else
         {
-            var factor = 1.5;
+            var factor = 3.5;
             var index = ((Math.random() * factor) | 0) % count;
             var itemindex = count - index - 1;
             item = this.m_buildarray[itemindex];
