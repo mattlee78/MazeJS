@@ -6,6 +6,17 @@ function createMazeProperties(mazeChangeCallback)
 
     var gp = p.addCategory("general", "General Options");
     var mazeTypeEnum = gp.addEnum("mazeType", "Maze Type", null, 0);
+    
+    var methodA = new Object();
+    methodA.displayName = "Straight";
+    methodA.value = 0;
+    var methodB = new Object();
+    methodB.displayName = "Curvy";
+    methodB.value = 1;
+    var methodC = new Object();
+    methodC.displayName = "Somewhat Curvy";
+    methodC.value = 2;
+    var mazeMethodEnum = gp.addEnum("mazeMethod", "Maze Method", [methodA, methodB, methodC], 2, mazeChangeCallback);
 
     var rp = p.addCategory("rect", "Rectangular", mazeChangeCallback);
     rp.isMaze = true;
@@ -35,6 +46,8 @@ function createMazeProperties(mazeChangeCallback)
 
 Maze.prototype.init = function (props, printWidth)
 {
+    this.setMethod(props.general.mazeMethod.value.value);
+    
     var mazeWidth = printWidth * (props.general.pageWidth.value / 100);
     var mt = props.general.mazeType.value;
 

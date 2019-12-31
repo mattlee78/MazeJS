@@ -47,7 +47,7 @@ function onLoad()
     g_props = createMazeProperties(rebuildMazeNewOptions);
     var gp = g_props.general;
     gp.mazeType.changeCallback = selectMazeType;
-    gp.addBoolean("showSolution", "Show Solution", true, refresh);
+    gp.addBoolean("showSolution", "Show Solution", false, refresh);
     gp.addButton("rebuildButton", "Rebuild Maze", rebuildMaze);
     gp.addBoolean("incrementalBuild", "Incremental Build", false, rebuildMaze);
     gp.addButton("stepButton", "Build Step", stepMaze);

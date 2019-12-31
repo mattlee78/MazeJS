@@ -7,6 +7,7 @@ class Maze
         this.clear();
         this.m_buildstack = new Set();
         this.m_buildarray = new Array();
+        this.m_method = 1;
     }
 
     clear()
@@ -16,6 +17,8 @@ class Maze
         this.m_exitCells = new Array();
         this.m_dimensions = new Point(0, 0);
         this.m_barriers = new Array();
+        this.m_lastTouchedCell = null;
+        this.m_lastBuildVector = new Vector(0, 0);
     }
 
     reset()
@@ -32,6 +35,8 @@ class Maze
         }
         this.m_buildstack = new Set();
         this.m_buildarray = new Array();
+        this.m_lastTouchedCell = null;
+        this.m_lastBuildVector = new Vector(0, 0);
     }
 
     addEdgeFiltered(originCell, neighborCell, edge)
@@ -88,7 +93,7 @@ class Maze
                 }
                 continue;
             }
-
+            
             var edgeCount = cell.m_edgeArray.length;
             for (var i = 0; i < edgeCount; ++i)
             {
@@ -111,6 +116,18 @@ class Maze
             {
                 c.fillText(index.toString(), cell.m_center.x, cell.m_center.y);
                 index++;
+            }
+
+            if (this.m_lastTouchedCell != null)
+            {
+                var cell = this.m_lastTouchedCell;
+                var markSize = 4;
+                c.beginPath();
+                c.moveTo(cell.m_center.x - markSize, cell.m_center.y - markSize);
+                c.lineTo(cell.m_center.x + markSize, cell.m_center.y + markSize);
+                c.moveTo(cell.m_center.x - markSize, cell.m_center.y + markSize);
+                c.lineTo(cell.m_center.x + markSize, cell.m_center.y - markSize);
+                c.stroke();
             }
         }
     }
@@ -182,6 +199,33 @@ class Maze
             }
         }
     }
+    
+    computeScore(dot)
+    {
+        switch (this.m_method)
+        {
+            case 0:
+            {
+                // straight bias
+                var fwddot = ((dot + 1) * 0.5) * 5 + 1;
+                return fwddot;
+            }
+            case 1:
+            {
+                // side bias
+                var sidedot = 1 - Math.abs(dot);
+                return Math.pow(sidedot, 3);
+            }
+            case 2:
+            {
+                // somewhat side bias
+                var sidedot = 1 - Math.abs(dot);
+                return (sidedot * 3) + 1;
+            }
+            default:
+                return 1;
+        }
+    }
 
     getUntouchedCell()
     {
@@ -193,23 +237,11 @@ class Maze
         }
 
         var item = null;
-
-        if (0) {
-            var shufflecount = count / 2;
-            for (var i = 0; i < shufflecount; ++i) {
-                var indexa = (Math.random() * count) | 0;
-                var indexb = (Math.random() * count) | 0;
-                if (indexa != indexb) {
-                    var temp = this.m_buildarray[indexa];
-                    this.m_buildarray[indexa] = this.m_buildarray[indexb];
-                    this.m_buildarray[indexb] = temp;
-                }
-            }
-
-            item = this.m_buildarray.pop();
-            this.m_buildstack.delete(item);
-        }
-        else
+        
+        var selectRandom = false;
+        
+        var lastRandom = false;
+        if (lastRandom)
         {
             var factor = 3.5;
             var index = ((Math.random() * factor) | 0) % count;
@@ -217,9 +249,82 @@ class Maze
             item = this.m_buildarray[itemindex];
             this.m_buildarray.splice(itemindex, 1);
             this.m_buildstack.delete(item);
+        }            
+        
+        var selectNeighbor = true;
+        if (selectNeighbor)
+        {
+            var neighborEntries = new Array();
+            var neighborWeights = new Array();
+            var weightSum = 0;
+            
+            if (this.m_lastTouchedCell != null)
+            {
+                var ltc = this.m_lastTouchedCell;
+                var neighborCount = ltc.m_neighborArray.length;
+                for (var i = 0; i < neighborCount; ++i)
+                {
+                    var neighbor = ltc.m_neighborArray[i];
+                    if (neighbor != null && !neighbor.hasBeenTouched())
+                    {
+                        var vecToNeighbor = neighbor.m_center.subtract(ltc.m_center);
+                        vecToNeighbor.normalize();
+                        var dot = vecToNeighbor.dot(this.m_lastBuildVector);
+                        
+                        var score = this.computeScore(dot);
+                        neighborEntries.push(neighbor);
+                        neighborWeights.push(score);
+                        weightSum += score;
+                    }
+                }
+                
+                if (neighborEntries.length > 0)
+                {
+                    var x = Math.random() * weightSum;
+                    for (var i = 0; i < neighborEntries.length; ++i)
+                    {
+                        x -= neighborWeights[i];
+                        if (x <= 0)
+                        {
+                            item = neighborEntries[i];
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (item == null)
+            {
+                selectRandom = true;
+            }
+            else
+            {
+                this.m_buildstack.delete(item);
+                for (var i = 0; i < this.m_buildarray.length; ++i)
+                {
+                    if (this.m_buildarray[i] == item)
+                    {
+                        this.m_buildarray.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (selectRandom) 
+        {
+            var index = (Math.random() * count) | 0;
+            item = this.m_buildarray[index];
+            this.m_buildarray.splice(index, 1);
+            this.m_buildstack.delete(item);
         }
 
         return item;
+    }
+    
+    setMethod(method)
+    {
+        this.m_method = method;
     }
 
     build(incremental)
@@ -269,10 +374,19 @@ class Maze
             var neighbor = newCell.m_neighborArray[i];
             if (neighbor != null && neighbor.hasBeenTouched())
             {
-                var edge = newCell.m_edgeArray[i];
-                for (var j = 0; j < edge.multiplier; ++j)
+                if (neighbor == this.m_lastTouchedCell)
                 {
+                    touchedNeighbors = new Array();
                     touchedNeighbors.push(i);
+                    break;
+                }
+                else
+                {
+                    var edge = newCell.m_edgeArray[i];
+                    for (var j = 0; j < edge.multiplier; ++j)
+                    {
+                        touchedNeighbors.push(i);
+                    }
                 }
             }
         }
@@ -280,6 +394,14 @@ class Maze
         var neighborIndex = (Math.random() * touchedNeighborCount) | 0;
         newCell.openEdgeByIndex(touchedNeighbors[neighborIndex]);
         this.addUntouchedNeighbors(newCell);
+        
+        if (this.m_lastTouchedCell != null)
+        {
+            var vecToNew = newCell.m_center.subtract(this.m_lastTouchedCell.m_center);
+            vecToNew.normalize();
+            this.m_lastBuildVector = vecToNew;
+        }
+        this.m_lastTouchedCell = newCell;
 
         return true;
     }
